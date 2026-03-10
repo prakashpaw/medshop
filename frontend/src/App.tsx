@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Pill, Activity, ShoppingCart, Settings, Users, Plus, Search, LogOut, CheckCircle2, ShieldAlert, HeartPulse, Trash2, Edit3, X, FileText, Camera, Moon, Sun, Loader2 } from "lucide-react";
 import Tesseract from "tesseract.js";
 import "./App.css";
-import "./App.css";
 
 interface Medicine {
   id: number;
@@ -371,459 +370,506 @@ export default function App() {
 
   // --- RENDER MAIN LAYOUT ---
   return (
-    <div className="app-container">
-      {/* Sidebar Navigation */}
-      <aside className="sidebar">
-        <div className="logo">
-          <HeartPulse size={28} /> MedShop
-        </div>
-        <ul className="nav-menu">
-          <li className={`nav-item ${activeTab === "inventory" ? "active" : ""}`} onClick={() => setActiveTab("inventory")}>
-            <Pill className="nav-icon" size={20} /> Inventory
-          </li>
-          <li className={`nav-item ${activeTab === "pos" ? "active" : ""}`} onClick={() => setActiveTab("pos")}>
-            <ShoppingCart className="nav-icon" size={20} /> Point of Sale
-          </li>
-          <li className={`nav-item ${activeTab === "suppliers" ? "active" : ""}`} onClick={() => setActiveTab("suppliers")}>
-            <Users className="nav-icon" size={20} /> Suppliers
-          </li>
-          <li className={`nav-item ${activeTab === "reports" ? "active" : ""}`} onClick={() => setActiveTab("reports")}>
-            <Activity className="nav-icon" size={20} /> Reports
-          </li>
-          <li className={`nav-item ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")}>
-            <Settings className="nav-icon" size={20} /> Settings
-          </li>
-        </ul>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="main-content">
-        <header className="header">
-          <div className="welcome-text">
-            <h1>{activeTab === 'inventory' ? 'Inventory Database' : activeTab === 'pos' ? 'Terminal Checkout' : activeTab === 'suppliers' ? 'Supplier Directory' : activeTab === 'reports' ? 'Analytics' : 'System Settings'}</h1>
-            <p className="subtitle">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    <>
+      <div className="app-container">
+        {/* Sidebar Navigation */}
+        <aside className="sidebar">
+          <div className="logo">
+            <HeartPulse size={28} /> MedShop
           </div>
-          <div className="header-actions">
-            <button
-              className="btn-secondary"
-              style={{ padding: '8px', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              title="Toggle Dark Mode"
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <div className="user-profile">
-              <div className="avatar">{loggedInUser.charAt(0).toUpperCase()}</div>
-              <span>{loggedInUser}</span>
+          <ul className="nav-menu">
+            <li className={`nav-item ${activeTab === "inventory" ? "active" : ""}`} onClick={() => setActiveTab("inventory")}>
+              <Pill className="nav-icon" size={20} /> Inventory
+            </li>
+            <li className={`nav-item ${activeTab === "pos" ? "active" : ""}`} onClick={() => setActiveTab("pos")}>
+              <ShoppingCart className="nav-icon" size={20} /> Point of Sale
+            </li>
+            <li className={`nav-item ${activeTab === "suppliers" ? "active" : ""}`} onClick={() => setActiveTab("suppliers")}>
+              <Users className="nav-icon" size={20} /> Suppliers
+            </li>
+            <li className={`nav-item ${activeTab === "reports" ? "active" : ""}`} onClick={() => setActiveTab("reports")}>
+              <Activity className="nav-icon" size={20} /> Reports
+            </li>
+            <li className={`nav-item ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")}>
+              <Settings className="nav-icon" size={20} /> Settings
+            </li>
+          </ul>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="main-content">
+          <header className="header">
+            <div className="welcome-text">
+              <h1>{activeTab === 'inventory' ? 'Inventory Database' : activeTab === 'pos' ? 'Terminal Checkout' : activeTab === 'suppliers' ? 'Supplier Directory' : activeTab === 'reports' ? 'Analytics' : 'System Settings'}</h1>
+              <p className="subtitle">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
-          </div>
-        </header>
-
-        {/* TAB: INVENTORY */}
-        {activeTab === "inventory" && (
-          <section className="inventory-section">
-            <div className="section-header">
-              <div className="search-box">
-                <Search className="search-icon" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search medicines by name or category..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  style={{ display: 'none' }}
-                  ref={fileInputRef}
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setIsScanning(true);
-                    try {
-                      const result = await Tesseract.recognize(file, 'eng');
-                      const textLines = result.data.text.split('\n').filter(Boolean);
-
-                      // Open modal immediately and pre-fill likely name text
-                      openAddModal();
-                      setFormData(prev => ({
-                        ...prev,
-                        name: textLines.length > 0 ? textLines[0].substring(0, 30) : "Scanned Medicine"
-                      }));
-                      alert("OCR Scanned text. Please review and fill in remaining details (stock, price, expiry).");
-                    } catch (err) {
-                      console.error("OCR Error", err);
-                      alert("Error extracting text from image");
-                    } finally {
-                      setIsScanning(false);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }
-                  }}
-                />
-                <button
-                  className="btn-secondary"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Scan using Camera/AI"
-                  disabled={isScanning}
-                >
-                  {isScanning ? <Loader2 className="animate-pulse" size={18} /> : <span><Camera size={18} /> Scan Medicine</span>}
-                </button>
-                <button className="btn-primary" onClick={openAddModal}>
-                  <Plus size={18} /> Register Medicine
-                </button>
+            <div className="header-actions">
+              <button
+                className="btn-secondary"
+                style={{ padding: '8px', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                title="Toggle Dark Mode"
+              >
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+              <div className="user-profile">
+                <div className="avatar">{loggedInUser.charAt(0).toUpperCase()}</div>
+                <span>{loggedInUser}</span>
               </div>
             </div>
+          </header>
 
-            {loading ? (
-              <div className="loader"><Activity className="animate-pulse" /> Syncing database...</div>
-            ) : (
+          {/* TAB: INVENTORY */}
+          {activeTab === "inventory" && (
+            <section className="inventory-section">
+              <div className="section-header">
+                <div className="search-box">
+                  <Search className="search-icon" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Search medicines by name or category..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    ref={fileInputRef}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsScanning(true);
+                      try {
+                        const result = await Tesseract.recognize(file, 'eng');
+                        const textLines = result.data.text.split('\n').filter(Boolean);
+
+                        // Open modal immediately and pre-fill likely name text
+                        openAddModal();
+                        setFormData(prev => ({
+                          ...prev,
+                          name: textLines.length > 0 ? textLines[0].substring(0, 30) : "Scanned Medicine"
+                        }));
+                        alert("OCR Scanned text. Please review and fill in remaining details (stock, price, expiry).");
+                      } catch (err) {
+                        console.error("OCR Error", err);
+                        alert("Error extracting text from image");
+                      } finally {
+                        setIsScanning(false);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }
+                    }}
+                  />
+                  <button
+                    className="btn-secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Scan using Camera/AI"
+                    disabled={isScanning}
+                  >
+                    {isScanning ? <Loader2 className="animate-pulse" size={18} /> : <span><Camera size={18} /> Scan Medicine</span>}
+                  </button>
+                  <button className="btn-primary" onClick={openAddModal}>
+                    <Plus size={18} /> Register Medicine
+                  </button>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="loader"><Activity className="animate-pulse" /> Syncing database...</div>
+              ) : (
+                <div className="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Medicine Name</th>
+                        <th>Category</th>
+                        <th>Stock Info</th>
+                        <th>Price</th>
+                        <th>Expiry</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredMedicines.map((med) => {
+                        const status = getStatusInfo(med);
+                        const supplier = suppliers.find(s => s.id === med.supplier_id);
+                        return (
+                          <tr key={med.id}>
+                            <td>
+                              <div className="medicine-name">{med.name}</div>
+                              {supplier && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Suppler: {supplier.name}</div>}
+                            </td>
+                            <td><span className="category-pill">{med.category || 'General'}</span></td>
+                            <td>
+                              <strong className={med.quantity < 20 ? "text-danger" : ""} style={{ fontSize: '1.1rem' }}>{med.quantity}</strong> units
+                            </td>
+                            <td style={{ fontWeight: 600 }}>₹{Number(med.price).toFixed(2)}</td>
+                            <td>{new Date(med.expiry_date).toLocaleDateString()}</td>
+                            <td><span className={`badge ${status.class}`}>{status.label}</span></td>
+                            <td className="actions-cell">
+                              <button className="btn-action btn-edit" onClick={() => openEditModal(med)} title="Edit"><Edit3 size={18} /></button>
+                              <button className="btn-action btn-delete" onClick={() => deleteMedicine(med.id)} title="Delete"><Trash2 size={18} /></button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {filteredMedicines.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="empty-state">
+                            <FileText className="empty-icon" size={48} />
+                            <p>No inventory records found.</p>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* TAB: POINT OF SALE */}
+          {activeTab === "pos" && (
+            <div className="grid-2">
+              <section className="inventory-section">
+                <h2>Add to Cart</h2>
+                <div className="search-box" style={{ width: '100%', margin: '1.5rem 0', display: 'flex', gap: '8px' }}>
+                  <Search className="search-icon" size={18} style={{ left: '16px' }} />
+                  <input
+                    type="text"
+                    placeholder="Scan barcode or type medicine name..."
+                    style={{ width: '100%' }}
+                    value={posSearch}
+                    onChange={e => setPosSearch(e.target.value)}
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    ref={fileInputRef}
+                    onChange={handleAIScan}
+                  />
+                  <button
+                    className="btn-secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Scan using Camera/AI"
+                    disabled={isScanning}
+                  >
+                    {isScanning ? <Loader2 className="animate-pulse" size={18} /> : <Camera size={18} />}
+                  </button>
+                </div>
+
+                <div className="search-results" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {posFilteredMedicines.map(med => (
+                    <div key={med.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid var(--border-light)', borderRadius: '12px' }}>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{med.name}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Stock: {med.quantity} | ₹{med.price}</div>
+                      </div>
+                      <button className="btn-primary" onClick={() => addToPosCart(med)} style={{ padding: '8px 16px', borderRadius: '8px' }}>
+                        Add <ShoppingCart size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  {posSearch && posFilteredMedicines.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No available items found.</div>
+                  )}
+                </div>
+              </section>
+
+              <section className="inventory-section" style={{ background: 'var(--primary)', color: 'white', display: 'flex', flexDirection: 'column' }}>
+                <h2 style={{ color: 'white', marginBottom: '1.5rem' }}>Current Bill</h2>
+                <div style={{ flexGrow: 1, overflowY: 'auto', background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+                  {posCart.length === 0 ? (
+                    <div style={{ textAlign: 'center', opacity: 0.8, marginTop: '2rem' }}>Cart is currently empty.</div>
+                  ) : (
+                    <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {posCart.map(item => (
+                        <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '10px' }}>
+                          <div>
+                            <div style={{ fontWeight: 600 }}>{item.name}</div>
+                            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{item.cartQuantity} x ₹{item.price}</div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <strong>₹{(item.cartQuantity * Number(item.price)).toFixed(2)}</strong>
+                            <button onClick={() => removeFromPosCart(item.id)} style={{ background: 'transparent', border: 'none', color: '#fca5a5', cursor: 'pointer' }}><X size={18} /></button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div style={{ borderTop: '2px solid rgba(255,255,255,0.2)', paddingTop: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
+                    <span>Total Due:</span>
+                    <span>₹{posCart.reduce((sum, item) => sum + (item.cartQuantity * Number(item.price)), 0).toFixed(2)}</span>
+                  </div>
+                  <button
+                    onClick={handleCheckout}
+                    disabled={posCart.length === 0}
+                    style={{ width: '100%', padding: '16px', background: 'white', color: 'var(--primary)', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 700, cursor: posCart.length ? 'pointer' : 'not-allowed', opacity: posCart.length ? 1 : 0.7 }}
+                  >
+                    <CheckCircle2 size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+                    Process Payment & Print
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* TAB: SUPPLIERS */}
+          {activeTab === "suppliers" && (
+            <section className="inventory-section">
+              <div className="section-header">
+                <h2>Authorized Suppliers</h2>
+                <button className="btn-primary" onClick={() => { setSupplierFormData({ name: '', contact_number: '', email: '', address: '' }); setShowSupplierModal(true); }}>
+                  <Plus size={18} /> Add Supplier
+                </button>
+              </div>
               <div className="table-wrapper">
                 <table>
                   <thead>
                     <tr>
-                      <th>Medicine Name</th>
-                      <th>Category</th>
-                      <th>Stock Info</th>
-                      <th>Price</th>
-                      <th>Expiry</th>
-                      <th>Status</th>
+                      <th>Company Name</th>
+                      <th>Contact</th>
+                      <th>Email</th>
+                      <th>Address</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredMedicines.map((med) => {
-                      const status = getStatusInfo(med);
-                      const supplier = suppliers.find(s => s.id === med.supplier_id);
-                      return (
-                        <tr key={med.id}>
-                          <td>
-                            <div className="medicine-name">{med.name}</div>
-                            {supplier && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Suppler: {supplier.name}</div>}
-                          </td>
-                          <td><span className="category-pill">{med.category || 'General'}</span></td>
-                          <td>
-                            <strong className={med.quantity < 20 ? "text-danger" : ""} style={{ fontSize: '1.1rem' }}>{med.quantity}</strong> units
-                          </td>
-                          <td style={{ fontWeight: 600 }}>₹{Number(med.price).toFixed(2)}</td>
-                          <td>{new Date(med.expiry_date).toLocaleDateString()}</td>
-                          <td><span className={`badge ${status.class}`}>{status.label}</span></td>
-                          <td className="actions-cell">
-                            <button className="btn-action btn-edit" onClick={() => openEditModal(med)} title="Edit"><Edit3 size={18} /></button>
-                            <button className="btn-action btn-delete" onClick={() => deleteMedicine(med.id)} title="Delete"><Trash2 size={18} /></button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                    {filteredMedicines.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="empty-state">
-                          <FileText className="empty-icon" size={48} />
-                          <p>No inventory records found.</p>
+                    {suppliers.map((sup: Supplier) => (
+                      <tr key={sup.id}>
+                        <td style={{ fontWeight: 600 }}>{sup.name}</td>
+                        <td>{sup.contact_number}</td>
+                        <td>{sup.email}</td>
+                        <td>{sup.address}</td>
+                        <td className="actions-cell">
+                          <button className="btn-action btn-delete" onClick={() => deleteSupplier(sup.id)}><Trash2 size={18} /></button>
                         </td>
+                      </tr>
+                    ))}
+                    {suppliers.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="empty-state">No suppliers registered.</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
-            )}
-          </section>
-        )}
+            </section>
+          )}
 
-        {/* TAB: POINT OF SALE */}
-        {activeTab === "pos" && (
-          <div className="grid-2">
+          {/* TAB: REPORTS */}
+          {activeTab === "reports" && (
+            <section className="reports-section">
+              <div className="stats-grid">
+                <div className="stat-card blue">
+                  <div className="icon-wrapper"><Pill size={28} /></div>
+                  <div><div className="label">Total Varieties</div><div className="value">{medicines.length}</div></div>
+                </div>
+                <div className="stat-card green">
+                  <div className="icon-wrapper">₹</div>
+                  <div><div className="label">Total Value</div><div className="value">₹{totalValue.toLocaleString()}</div></div>
+                </div>
+                <div className="stat-card warning">
+                  <div className="icon-wrapper"><ShieldAlert size={28} /></div>
+                  <div><div className="label">Expiring ≤ 90 Days</div><div className="value">{expiringSoonCount}</div></div>
+                </div>
+                <div className="stat-card danger">
+                  <div className="icon-wrapper"><Activity size={28} /></div>
+                  <div><div className="label">Out of Stock</div><div className="value">{medicines.filter(m => m.quantity === 0).length}</div></div>
+                </div>
+              </div>
+
+              <section className="inventory-section">
+                <h3>Recent Sales Overview</h3>
+                <p className="subtitle">Realtime fetching of total sales volumes goes here.</p>
+                {/* Could fetch and display /sales data here, keeping UI simple for now */}
+              </section>
+            </section>
+          )}
+
+          {/* TAB: SETTINGS */}
+          {activeTab === "settings" && (
             <section className="inventory-section">
-              <h2>Add to Cart</h2>
-              <div className="search-box" style={{ width: '100%', margin: '1.5rem 0', display: 'flex', gap: '8px' }}>
-                <Search className="search-icon" size={18} style={{ left: '16px' }} />
-                <input
-                  type="text"
-                  placeholder="Scan barcode or type medicine name..."
-                  style={{ width: '100%' }}
-                  value={posSearch}
-                  onChange={e => setPosSearch(e.target.value)}
-                />
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  style={{ display: 'none' }}
-                  ref={fileInputRef}
-                  onChange={handleAIScan}
-                />
+              <h2>System Preferences</h2>
+              <div style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid var(--border-light)', borderRadius: '16px', maxWidth: '600px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '2rem' }}>
+                  <div className="avatar" style={{ width: '64px', height: '64px', fontSize: '1.5rem' }}>
+                    {loggedInUser.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0 }}>{loggedInUser}</h3>
+                    <p className="subtitle">Master Administrator</p>
+                  </div>
+                </div>
                 <button
                   className="btn-secondary"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Scan using Camera/AI"
-                  disabled={isScanning}
+                  style={{ borderColor: 'var(--danger)', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  onClick={handleLogout}
                 >
-                  {isScanning ? <Loader2 className="animate-pulse" size={18} /> : <Camera size={18} />}
-                </button>
-              </div>
-
-              <div className="search-results" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {posFilteredMedicines.map(med => (
-                  <div key={med.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid var(--border-light)', borderRadius: '12px' }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{med.name}</div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Stock: {med.quantity} | ₹{med.price}</div>
-                    </div>
-                    <button className="btn-primary" onClick={() => addToPosCart(med)} style={{ padding: '8px 16px', borderRadius: '8px' }}>
-                      Add <ShoppingCart size={16} />
-                    </button>
-                  </div>
-                ))}
-                {posSearch && posFilteredMedicines.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No available items found.</div>
-                )}
-              </div>
-            </section>
-
-            <section className="inventory-section" style={{ background: 'var(--primary)', color: 'white', display: 'flex', flexDirection: 'column' }}>
-              <h2 style={{ color: 'white', marginBottom: '1.5rem' }}>Current Bill</h2>
-              <div style={{ flexGrow: 1, overflowY: 'auto', background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
-                {posCart.length === 0 ? (
-                  <div style={{ textAlign: 'center', opacity: 0.8, marginTop: '2rem' }}>Cart is currently empty.</div>
-                ) : (
-                  <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {posCart.map(item => (
-                      <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '10px' }}>
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{item.name}</div>
-                          <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{item.cartQuantity} x ₹{item.price}</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <strong>₹{(item.cartQuantity * Number(item.price)).toFixed(2)}</strong>
-                          <button onClick={() => removeFromPosCart(item.id)} style={{ background: 'transparent', border: 'none', color: '#fca5a5', cursor: 'pointer' }}><X size={18} /></button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div style={{ borderTop: '2px solid rgba(255,255,255,0.2)', paddingTop: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-                  <span>Total Due:</span>
-                  <span>₹{posCart.reduce((sum, item) => sum + (item.cartQuantity * Number(item.price)), 0).toFixed(2)}</span>
-                </div>
-                <button
-                  onClick={handleCheckout}
-                  disabled={posCart.length === 0}
-                  style={{ width: '100%', padding: '16px', background: 'white', color: 'var(--primary)', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 700, cursor: posCart.length ? 'pointer' : 'not-allowed', opacity: posCart.length ? 1 : 0.7 }}
-                >
-                  <CheckCircle2 size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                  Process Payment & Print
+                  <LogOut size={18} /> Terminate Session
                 </button>
               </div>
             </section>
-          </div>
-        )}
+          )}
 
-        {/* TAB: SUPPLIERS */}
-        {activeTab === "suppliers" && (
-          <section className="inventory-section">
-            <div className="section-header">
-              <h2>Authorized Suppliers</h2>
-              <button className="btn-primary" onClick={() => { setSupplierFormData({ name: '', contact_number: '', email: '', address: '' }); setShowSupplierModal(true); }}>
-                <Plus size={18} /> Add Supplier
-              </button>
-            </div>
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Company Name</th>
-                    <th>Contact</th>
-                    <th>Email</th>
-                    <th>Address</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {suppliers.map((sup: Supplier) => (
-                    <tr key={sup.id}>
-                      <td style={{ fontWeight: 600 }}>{sup.name}</td>
-                      <td>{sup.contact_number}</td>
-                      <td>{sup.email}</td>
-                      <td>{sup.address}</td>
-                      <td className="actions-cell">
-                        <button className="btn-action btn-delete" onClick={() => deleteSupplier(sup.id)}><Trash2 size={18} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                  {suppliers.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="empty-state">No suppliers registered.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+        </main>
 
-        {/* TAB: REPORTS */}
-        {activeTab === "reports" && (
-          <section className="reports-section">
-            <div className="stats-grid">
-              <div className="stat-card blue">
-                <div className="icon-wrapper"><Pill size={28} /></div>
-                <div><div className="label">Total Varieties</div><div className="value">{medicines.length}</div></div>
+        {/* MODAL: Medicine */}
+        {showModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <div className="modal-header">
+                <h2>{isEditing ? "Modify Drug Entry" : "Register Pharmaceutical"}</h2>
+                <button className="btn-close" onClick={() => setShowModal(false)}><X size={24} /></button>
               </div>
-              <div className="stat-card green">
-                <div className="icon-wrapper">₹</div>
-                <div><div className="label">Total Value</div><div className="value">₹{totalValue.toLocaleString()}</div></div>
-              </div>
-              <div className="stat-card warning">
-                <div className="icon-wrapper"><ShieldAlert size={28} /></div>
-                <div><div className="label">Expiring ≤ 90 Days</div><div className="value">{expiringSoonCount}</div></div>
-              </div>
-              <div className="stat-card danger">
-                <div className="icon-wrapper"><Activity size={28} /></div>
-                <div><div className="label">Out of Stock</div><div className="value">{medicines.filter(m => m.quantity === 0).length}</div></div>
-              </div>
-            </div>
-
-            <section className="inventory-section">
-              <h3>Recent Sales Overview</h3>
-              <p className="subtitle">Realtime fetching of total sales volumes goes here.</p>
-              {/* Could fetch and display /sales data here, keeping UI simple for now */}
-            </section>
-          </section>
-        )}
-
-        {/* TAB: SETTINGS */}
-        {activeTab === "settings" && (
-          <section className="inventory-section">
-            <h2>System Preferences</h2>
-            <div style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid var(--border-light)', borderRadius: '16px', maxWidth: '600px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '2rem' }}>
-                <div className="avatar" style={{ width: '64px', height: '64px', fontSize: '1.5rem' }}>
-                  {loggedInUser.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h3 style={{ margin: 0 }}>{loggedInUser}</h3>
-                  <p className="subtitle">Master Administrator</p>
-                </div>
-              </div>
-              <button
-                className="btn-secondary"
-                style={{ borderColor: 'var(--danger)', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '8px' }}
-                onClick={handleLogout}
-              >
-                <LogOut size={18} /> Terminate Session
-              </button>
-            </div>
-          </section>
-        )}
-
-      </main>
-
-      {/* MODAL: Medicine */}
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>{isEditing ? "Modify Drug Entry" : "Register Pharmaceutical"}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}><X size={24} /></button>
-            </div>
-            <form onSubmit={saveMedicine} className="modern-form">
-              <div className="form-group">
-                <label>Medicine Definition</label>
-                <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="e.g. Paracetamol 500mg" />
-              </div>
-
-              <div className="form-row">
+              <form onSubmit={saveMedicine} className="modern-form">
                 <div className="form-group">
-                  <label>Classification</label>
-                  <select name="category" value={formData.category} onChange={handleInputChange}>
-                    <option value="Tablets">Tablets</option>
-                    <option value="Syrups">Syrups</option>
-                    <option value="Injections">Injections</option>
-                    <option value="Ointments">Ointments</option>
-                    <option value="First Aid">First Aid</option>
-                    <option value="General">General</option>
+                  <label>Medicine Definition</label>
+                  <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="e.g. Paracetamol 500mg" />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Classification</label>
+                    <select name="category" value={formData.category} onChange={handleInputChange}>
+                      <option value="Tablets">Tablets</option>
+                      <option value="Syrups">Syrups</option>
+                      <option value="Injections">Injections</option>
+                      <option value="Ointments">Ointments</option>
+                      <option value="First Aid">First Aid</option>
+                      <option value="General">General</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Unit Price (₹)</label>
+                    <input type="number" name="price" value={formData.price} onChange={handleInputChange} required min="0" step="0.01" />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Stock Count</label>
+                    <input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} required min="0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Expiry Date</label>
+                    <input type="date" name="expiry_date" value={formData.expiry_date} onChange={handleInputChange} required />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Authorized Supplier (Optional)</label>
+                  <select name="supplier_id" value={formData.supplier_id} onChange={handleInputChange}>
+                    <option value="">-- No Primary Supplier --</option>
+                    {suppliers.map(sup => (
+                      <option key={sup.id} value={sup.id}>{sup.name}</option>
+                    ))}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Unit Price (₹)</label>
-                  <input type="number" name="price" value={formData.price} onChange={handleInputChange} required min="0" step="0.01" />
+
+                <div className="modal-actions">
+                  <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="submit" className="btn-primary">
+                    {isEditing ? "Save Adjustments" : "Add to Database"}
+                  </button>
                 </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Stock Count</label>
-                  <input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} required min="0" />
-                </div>
-                <div className="form-group">
-                  <label>Expiry Date</label>
-                  <input type="date" name="expiry_date" value={formData.expiry_date} onChange={handleInputChange} required />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Authorized Supplier (Optional)</label>
-                <select name="supplier_id" value={formData.supplier_id} onChange={handleInputChange}>
-                  <option value="">-- No Primary Supplier --</option>
-                  {suppliers.map(sup => (
-                    <option key={sup.id} value={sup.id}>{sup.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">
-                  {isEditing ? "Save Adjustments" : "Add to Database"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: Supplier */}
-      {showSupplierModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Register New Supplier</h2>
-              <button className="btn-close" onClick={() => setShowSupplierModal(false)}><X size={24} /></button>
+              </form>
             </div>
-            <form onSubmit={saveSupplier} className="modern-form">
-              <div className="form-group">
-                <label>Company Name</label>
-                <input type="text" value={supplierFormData.name} onChange={e => setSupplierFormData({ ...supplierFormData, name: e.target.value })} required />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Contact Number</label>
-                  <input type="text" value={supplierFormData.contact_number} onChange={e => setSupplierFormData({ ...supplierFormData, contact_number: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label>Email Address</label>
-                  <input type="email" value={supplierFormData.email} onChange={e => setSupplierFormData({ ...supplierFormData, email: e.target.value })} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Physical Address</label>
-                <input type="text" value={supplierFormData.address} onChange={e => setSupplierFormData({ ...supplierFormData, address: e.target.value })} />
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowSupplierModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Register Supplier</button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        )}
 
-    </div>
+        {/* MODAL: Supplier */}
+        {showSupplierModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <div className="modal-header">
+                <h2>Register New Supplier</h2>
+                <button className="btn-close" onClick={() => setShowSupplierModal(false)}><X size={24} /></button>
+              </div>
+              <form onSubmit={saveSupplier} className="modern-form">
+                <div className="form-group">
+                  <label>Company Name</label>
+                  <input type="text" value={supplierFormData.name} onChange={e => setSupplierFormData({ ...supplierFormData, name: e.target.value })} required />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Contact Number</label>
+                    <input type="text" value={supplierFormData.contact_number} onChange={e => setSupplierFormData({ ...supplierFormData, contact_number: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Email Address</label>
+                    <input type="email" value={supplierFormData.email} onChange={e => setSupplierFormData({ ...supplierFormData, email: e.target.value })} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Physical Address</label>
+                  <input type="text" value={supplierFormData.address} onChange={e => setSupplierFormData({ ...supplierFormData, address: e.target.value })} />
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" className="btn-secondary" onClick={() => setShowSupplierModal(false)}>Cancel</button>
+                  <button type="submit" className="btn-primary">Register Supplier</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* --- INVISIBLE PRINTABLE RECEIPT FOR JAISWAL MEDICAL BARAD --- */}
+      <div id="printable-receipt" className="print-only">
+        <div className="receipt-header">
+          <h2>JAISWAL MEDICAL BARAD</h2>
+          <p>Main Market, Barad</p>
+          <p>Phone: +91 9876543210</p>
+          <div className="receipt-divider"></div>
+          <p>Date: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</p>
+          <p>Invoice #: {Math.floor(Math.random() * 1000000)}</p>
+        </div>
+        <div className="receipt-divider"></div>
+        <table className="receipt-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {posCart.map(item => (
+              <tr key={item.id}>
+                <td>{item.name}</td>
+                <td>{item.cartQuantity}</td>
+                <td>₹{Number(item.price).toFixed(2)}</td>
+                <td>₹{(item.cartQuantity * Number(item.price)).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="receipt-divider"></div>
+        <div className="receipt-total">
+          <strong>TOTAL:</strong>
+          <strong>
+            ₹{posCart.reduce((sum, item) => sum + (item.cartQuantity * Number(item.price)), 0).toFixed(2)}
+          </strong>
+        </div>
+        <div className="receipt-divider"></div>
+        <div className="receipt-footer">
+          <p>Thank you for your visit!</p>
+          <p>Get Well Soon</p>
+        </div>
+      </div>
+    </>
   );
 }
