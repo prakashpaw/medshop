@@ -830,8 +830,8 @@ export default function App() {
       <div id="printable-receipt" className="print-only">
         <div className="receipt-header">
           <h2>JAISWAL MEDICAL BARAD</h2>
-          <p>Main Market, Barad</p>
-          <p>Phone: +91 9876543210</p>
+          <p>Nanded-Bhokar Road, Beside Barad main Kaman, Barad</p>
+          <p>Phone: +91 9842901919</p>
           <div className="receipt-divider"></div>
           <p>Date: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</p>
           <p>Invoice #: {Math.floor(Math.random() * 1000000)}</p>
@@ -868,6 +868,7 @@ export default function App() {
         <div className="receipt-footer">
           <p>Thank you for your visit!</p>
           <p>Get Well Soon</p>
+          <p>This website is developed and managed by Prakash-Pawar</p>
         </div>
       </div>
     </>
