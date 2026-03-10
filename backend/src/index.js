@@ -42,7 +42,7 @@ const initDb = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admins (
         id SERIAL PRIMARY KEY,
@@ -89,7 +89,7 @@ app.post('/admins/register', async (req, res) => {
     if (parseInt(countCheck.rows[0].count) > 0) {
       return res.status(403).json({ error: 'An admin is already registered. Please login.' });
     }
-    
+
     const hashedPassword = hashPassword(password);
     await pool.query('INSERT INTO admins (username, password_hash) VALUES ($1, $2)', [username, hashedPassword]);
     const token = jwt.sign({ username }, 'secret_medshop_key', { expiresIn: '1d' });
@@ -107,7 +107,7 @@ app.post('/admins/login', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
-    
+
     const admin = result.rows[0];
     if (admin.password_hash === hashPassword(password)) {
       const token = jwt.sign({ username: admin.username, id: admin.id }, 'secret_medshop_key', { expiresIn: '1d' });

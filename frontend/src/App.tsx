@@ -130,9 +130,9 @@ export default function App() {
 
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ 
-      ...prev, 
-      [name]: name === "quantity" || name === "price" ? parseFloat(value) || 0 : value 
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "quantity" || name === "price" ? parseFloat(value) || 0 : value
     }));
   };
 
@@ -158,13 +158,13 @@ export default function App() {
     try {
       const method = isEditing ? "PUT" : "POST";
       const url = isEditing ? `${API_URL}/medicines/${currentMedId}` : `${API_URL}/medicines`;
-      
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      if(!res.ok) throw new Error("Server error");
+      if (!res.ok) throw new Error("Server error");
       closeModal();
       fetchMedicines();
     } catch (err) {
@@ -196,7 +196,7 @@ export default function App() {
     const expiry = new Date(med.expiry_date);
     const now = new Date();
     const diffDays = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return { label: "Expired", class: "badge-danger" };
     if (diffDays <= 30) return { label: "Expiring Soon", class: "badge-warning" };
     if (med.quantity === 0) return { label: "Out of Stock", class: "badge-danger" };
@@ -223,7 +223,7 @@ export default function App() {
           <p className="auth-subtitle">
             {adminSetupRequired ? "No admin found. Create your master account." : "Enter your credentials to manage inventory"}
           </p>
-          
+
           <form className="modern-form" onSubmit={adminSetupRequired ? handleInitialSetup : handleLogin}>
             <div className="form-group">
               <label>Admin Username</label>
@@ -252,16 +252,16 @@ export default function App() {
         </div>
         <ul className="nav-menu">
           <li className={`nav-item ${activeTab === "inventory" ? "active" : ""}`} onClick={() => setActiveTab("inventory")}>
-             <span className="nav-icon">📦</span> Inventory
+            <span className="nav-icon">📦</span> Inventory
           </li>
           <li className={`nav-item ${activeTab === "reports" ? "active" : ""}`} onClick={() => setActiveTab("reports")}>
-             <span className="nav-icon">📊</span> Reports
+            <span className="nav-icon">📊</span> Reports
           </li>
           <li className={`nav-item ${activeTab === "pos" ? "active" : ""}`} onClick={() => setActiveTab("pos")}>
-             <span className="nav-icon">💳</span> Point of Sale
+            <span className="nav-icon">💳</span> Point of Sale
           </li>
           <li className={`nav-item ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")}>
-             <span className="nav-icon">⚙️</span> Settings
+            <span className="nav-icon">⚙️</span> Settings
           </li>
         </ul>
       </aside>
@@ -277,9 +277,9 @@ export default function App() {
             {activeTab === 'inventory' && (
               <div className="search-box">
                 <span className="search-icon">🔍</span>
-                <input 
-                  type="text" 
-                  placeholder="Search medicines..." 
+                <input
+                  type="text"
+                  placeholder="Search medicines..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -302,7 +302,7 @@ export default function App() {
                   <span className="plus">+</span> Add Medicine
                 </button>
               </div>
-              
+
               {loading ? (
                 <div className="loader">Loading database...</div>
               ) : (
@@ -331,8 +331,8 @@ export default function App() {
                             <td>{new Date(med.expiry_date).toLocaleDateString()}</td>
                             <td><span className={`badge ${status.class}`}>{status.label}</span></td>
                             <td className="actions-cell">
-                              <button 
-                                className="btn-action btn-sell tooltip" 
+                              <button
+                                className="btn-action btn-sell tooltip"
                                 onClick={() => sellMedicine(med.id, med.quantity)}
                                 disabled={med.quantity === 0}
                                 title="Quick Sell 1 Unit"
@@ -363,8 +363,8 @@ export default function App() {
 
         {/* TAB: REPORTS */}
         {activeTab === "reports" && (
-           <section className="reports-section">
-             <div className="stats-grid">
+          <section className="reports-section">
+            <div className="stats-grid">
               <div className="stat-card blue">
                 <div className="icon-wrapper">💊</div>
                 <div><div className="label">Total Varieties</div><div className="value">{medicines.length}</div></div>
@@ -382,50 +382,50 @@ export default function App() {
                 <div><div className="label">Out of Stock items</div><div className="value">{outOfStockCount}</div></div>
               </div>
             </div>
-           </section>
+          </section>
         )}
 
         {/* TAB: POS */}
         {activeTab === "pos" && (
-           <section className="inventory-section pos-section">
-             <h2>Terminal Point of Sale</h2>
-             <p className="text-muted" style={{marginBottom: '2rem'}}>Quick checkouts and billing functions go here.</p>
-             <div className="grid-2">
-                <div className="search-box" style={{width: '100%', marginBottom: '1rem'}}>
-                  <span className="search-icon">🔍</span>
-                  <input type="text" placeholder="Scan Barcode or search item to bill..." style={{width: '100%'}}/>
-                </div>
-                <button className="btn-primary" style={{width: 'wrap-content'}}>Checkout Customer</button>
-             </div>
-           </section>
+          <section className="inventory-section pos-section">
+            <h2>Terminal Point of Sale</h2>
+            <p className="text-muted" style={{ marginBottom: '2rem' }}>Quick checkouts and billing functions go here.</p>
+            <div className="grid-2">
+              <div className="search-box" style={{ width: '100%', marginBottom: '1rem' }}>
+                <span className="search-icon">🔍</span>
+                <input type="text" placeholder="Scan Barcode or search item to bill..." style={{ width: '100%' }} />
+              </div>
+              <button className="btn-primary" style={{ width: 'wrap-content' }}>Checkout Customer</button>
+            </div>
+          </section>
         )}
 
         {/* TAB: SETTINGS */}
         {activeTab === "settings" && (
-           <section className="inventory-section settings-section">
-             <h2>Admin Settings</h2>
-             
-             <div className="settings-block" style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid var(--glass-border)', borderRadius: '16px', maxWidth: '600px'}}>
-               <h3 style={{marginBottom: '1rem'}}>Create New Admin ID</h3>
-               <form className="modern-form" style={{padding:0}} onSubmit={handleCreateNewAdmin}>
-                 <div className="form-row">
-                   <div className="form-group half">
-                     <label>New Username</label>
-                     <input type="text" name="newUsername" required/>
-                   </div>
-                   <div className="form-group half">
-                     <label>Password</label>
-                     <input type="password" name="newPassword" required/>
-                   </div>
-                 </div>
-                 <button type="submit" className="btn-primary">Create User</button>
-               </form>
-             </div>
+          <section className="inventory-section settings-section">
+            <h2>Admin Settings</h2>
 
-             <div className="settings-block" style={{ marginTop: '2rem'}}>
-                <button className="btn-secondary" style={{borderColor: 'var(--danger)', color: 'var(--danger)'}} onClick={handleLogout}>Log Out</button>
-             </div>
-           </section>
+            <div className="settings-block" style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid var(--glass-border)', borderRadius: '16px', maxWidth: '600px' }}>
+              <h3 style={{ marginBottom: '1rem' }}>Create New Admin ID</h3>
+              <form className="modern-form" style={{ padding: 0 }} onSubmit={handleCreateNewAdmin}>
+                <div className="form-row">
+                  <div className="form-group half">
+                    <label>New Username</label>
+                    <input type="text" name="newUsername" required />
+                  </div>
+                  <div className="form-group half">
+                    <label>Password</label>
+                    <input type="password" name="newPassword" required />
+                  </div>
+                </div>
+                <button type="submit" className="btn-primary">Create User</button>
+              </form>
+            </div>
+
+            <div className="settings-block" style={{ marginTop: '2rem' }}>
+              <button className="btn-secondary" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }} onClick={handleLogout}>Log Out</button>
+            </div>
+          </section>
         )}
 
       </main>
@@ -443,7 +443,7 @@ export default function App() {
                 <label>Medicine Name</label>
                 <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="e.g. Paracetamol 500mg" />
               </div>
-              
+
               <div className="form-row">
                 <div className="form-group half">
                   <label>Category</label>
