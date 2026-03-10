@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+  frontend:
+    image: pawarpr/medshop_frontend:latest
+    ports:
+      - "80:80"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+  backend:
+    image: pawarpr/medshop_backend:latest
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+    ports:
+      - "3000:3000"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: medadmin
+      POSTGRES_PASSWORD: medpass
+      POSTGRES_DB: medshop
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    deploy:
+      replicas: 1
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+volumes:
+  db_data:
