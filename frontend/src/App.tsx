@@ -28,12 +28,12 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Auth State
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Auth State — restore from localStorage on mount to survive page refresh
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('medshop_token'));
   const [adminSetupRequired, setAdminSetupRequired] = useState(false);
   const [adminUsername, setAdminUsername] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
-  const [loggedInUser, setLoggedInUser] = useState("");
+  const [loggedInUser, setLoggedInUser] = useState(() => localStorage.getItem('medshop_user') || "");
 
   // Modals & Forms
   const [showModal, setShowModal] = useState(false);
@@ -94,6 +94,8 @@ export default function App() {
       });
       const data = await res.json();
       if (data.success) {
+        localStorage.setItem('medshop_token', data.token);
+        localStorage.setItem('medshop_user', data.username);
         setIsAuthenticated(true);
         setLoggedInUser(data.username);
       } else {
@@ -126,6 +128,8 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('medshop_token');
+    localStorage.removeItem('medshop_user');
     setIsAuthenticated(false);
     setLoggedInUser("");
     setAdminUsername("");

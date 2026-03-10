@@ -157,6 +157,35 @@ app.post('/admins/login', async (req, res) => {
   }
 });
 
+// Create a new admin (no UI - use curl with the secret key)
+// Usage: curl -X POST http://YOUR_SERVER:3000/admins/create \
+//   -H "Content-Type: application/json" \
+//   -H "x-admin-secret: medshop_create_admin_2024" \
+//   -d '{"username":"newadmin","password":"yourpassword"}'
+const ADMIN_CREATE_SECRET = process.env.ADMIN_CREATE_SECRET || 'medshop_create_admin_2024';
+
+app.post('/admins/create', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== ADMIN_CREATE_SECRET) {
+    return res.status(403).json({ error: 'Unauthorized: invalid admin secret' });
+  }
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'username and password are required' });
+  }
+  try {
+    const hashedPassword = hashPassword(password);
+    await pool.query('INSERT INTO admins (username, password_hash) VALUES ($1, $2)', [username, hashedPassword]);
+    res.json({ success: true, message: `Admin '${username}' created successfully.` });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
