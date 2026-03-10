@@ -650,13 +650,24 @@ body.dark-mode {
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --border-light: #334155;
+  background-color: var(--bg-main);
+  color: var(--text-main);
 }
 
 body.dark-mode input,
-body.dark-mode select {
-  background-color: var(--bg-main);
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #1e293b;
   color: var(--text-main);
   border: 1px solid var(--border-light);
+}
+
+body.dark-mode input::placeholder {
+  color: var(--text-muted);
+}
+
+body.dark-mode label {
+  color: var(--text-main);
 }
 
 body.dark-mode table th {
@@ -664,12 +675,114 @@ body.dark-mode table th {
   color: var(--text-main);
 }
 
-body.dark-mode .nav-item:hover {
+body.dark-mode table td {
+  color: var(--text-main);
+  border-color: var(--border-light);
+}
+
+body.dark-mode .nav-item {
+  color: var(--text-muted);
+}
+
+body.dark-mode .nav-item:hover,
+body.dark-mode .nav-item.active {
   background: var(--bg-accent);
+  color: var(--text-main);
 }
 
 body.dark-mode .modal {
   background-color: var(--bg-card);
+  color: var(--text-main);
+}
+
+body.dark-mode .modal h2 {
+  color: var(--text-main);
+}
+
+body.dark-mode .modal-header {
+  border-color: var(--border-light);
+}
+
+body.dark-mode .stat-card {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+body.dark-mode .stat-card .label,
+body.dark-mode .stat-card .value {
+  color: var(--text-main);
+}
+
+body.dark-mode .inventory-section {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+body.dark-mode .section-header h2,
+body.dark-mode .section-header h3 {
+  color: var(--text-main);
+}
+
+body.dark-mode .search-box input {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: var(--border-light);
+}
+
+body.dark-mode .category-pill {
+  background: var(--bg-accent);
+  color: var(--text-main);
+}
+
+body.dark-mode .medicine-name {
+  color: var(--text-main);
+}
+
+body.dark-mode .user-profile {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: var(--border-light);
+}
+
+body.dark-mode .welcome-text h1 {
+  color: var(--text-main);
+}
+
+body.dark-mode .subtitle {
+  color: var(--text-muted);
+}
+
+body.dark-mode .auth-container {
+  background: var(--bg-main);
+}
+
+body.dark-mode .auth-box {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+  color: var(--text-main);
+}
+
+body.dark-mode .auth-box h2,
+body.dark-mode .auth-subtitle {
+  color: var(--text-muted);
+}
+
+body.dark-mode .modern-form {
+  color: var(--text-main);
+}
+
+body.dark-mode .table-wrapper {
+  background: var(--bg-card);
+}
+
+body.dark-mode .btn-secondary {
+  background: var(--bg-accent);
+  color: var(--text-main);
+  border-color: var(--border-light);
+}
+
+body.dark-mode .empty-state {
+  color: var(--text-muted);
 }
 
 /* --- PRINT RECEIPT STYLES --- */

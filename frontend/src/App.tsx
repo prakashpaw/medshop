@@ -252,6 +252,11 @@ export default function App() {
     setPosCart(posCart.filter(item => item.id !== id));
   };
 
+  const updateCartQuantity = (id: number, newQty: number) => {
+    if (newQty < 1) return;
+    setPosCart(prev => prev.map(item => item.id === id ? { ...item, cartQuantity: newQty } : item));
+  };
+
   const handleCheckout = async () => {
     if (posCart.length === 0) return alert("Cart is empty");
     const total_amount = posCart.reduce((sum: number, item: any) => sum + (item.cartQuantity * Number(item.price)), 0);
@@ -593,7 +598,19 @@ export default function App() {
                         <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '10px' }}>
                           <div>
                             <div style={{ fontWeight: 600 }}>{item.name}</div>
-                            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{item.cartQuantity} x ₹{item.price}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', opacity: 0.9 }}>
+                              <button
+                                onClick={() => updateCartQuantity(item.id, item.cartQuantity - 1)}
+                                disabled={item.cartQuantity <= 1}
+                                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', borderRadius: '6px', width: '24px', height: '24px', cursor: 'pointer', fontWeight: 700, fontSize: '1rem' }}
+                              >-</button>
+                              <span style={{ minWidth: '22px', textAlign: 'center', fontWeight: 700 }}>{item.cartQuantity}</span>
+                              <button
+                                onClick={() => updateCartQuantity(item.id, item.cartQuantity + 1)}
+                                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', borderRadius: '6px', width: '24px', height: '24px', cursor: 'pointer', fontWeight: 700, fontSize: '1rem' }}
+                              >+</button>
+                              <span>x ₹{item.price}</span>
+                            </div>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <strong>₹{(item.cartQuantity * Number(item.price)).toFixed(2)}</strong>
