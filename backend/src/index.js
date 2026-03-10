@@ -32,6 +32,17 @@ const initDb = async () => {
   if (isDbInitialized) return true;
   try {
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS suppliers (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        contact_number VARCHAR(50),
+        email VARCHAR(255),
+        address TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS medicines (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -39,7 +50,32 @@ const initDb = async () => {
         quantity INT NOT NULL,
         price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
         expiry_date DATE NOT NULL,
+        supplier_id INT REFERENCES suppliers(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Add supplier_id safely if table already existed without dropping it
+    const checkSupplierCol = await pool.query("SELECT column_name FROM information_schema.columns WHERE table_name='medicines' AND column_name='supplier_id'");
+    if (checkSupplierCol.rows.length === 0) {
+      await pool.query('ALTER TABLE medicines ADD COLUMN supplier_id INT REFERENCES suppliers(id) ON DELETE SET NULL');
+    }
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS sales (
+        id SERIAL PRIMARY KEY,
+        total_amount DECIMAL(10, 2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS sale_items (
+        id SERIAL PRIMARY KEY,
+        sale_id INT REFERENCES sales(id) ON DELETE CASCADE,
+        medicine_id INT REFERENCES medicines(id) ON DELETE SET NULL,
+        quantity INT NOT NULL,
+        price DECIMAL(10, 2) NOT NULL
       );
     `);
 
@@ -138,11 +174,11 @@ app.get('/medicines', async (req, res) => {
 
 // Add a new medicine
 app.post('/medicines', async (req, res) => {
-  const { name, category, quantity, price, expiry_date } = req.body;
+  const { name, category, quantity, price, expiry_date, supplier_id } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO medicines (name, category, quantity, price, expiry_date) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, category || 'General', quantity, price || 0, expiry_date]
+      'INSERT INTO medicines (name, category, quantity, price, expiry_date, supplier_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [name, category || 'General', quantity, price || 0, expiry_date, supplier_id || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -154,11 +190,11 @@ app.post('/medicines', async (req, res) => {
 // Update medicine
 app.put('/medicines/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, category, quantity, price, expiry_date } = req.body;
+  const { name, category, quantity, price, expiry_date, supplier_id } = req.body;
   try {
     const result = await pool.query(
-      'UPDATE medicines SET name = $1, category = $2, quantity = $3, price = $4, expiry_date = $5 WHERE id = $6 RETURNING *',
-      [name, category, quantity, price, expiry_date, id]
+      'UPDATE medicines SET name = $1, category = $2, quantity = $3, price = $4, expiry_date = $5, supplier_id = $6 WHERE id = $7 RETURNING *',
+      [name, category, quantity, price, expiry_date, supplier_id || null, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -188,6 +224,92 @@ app.delete('/medicines/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM medicines WHERE id = $1', [id]);
     res.json({ message: 'Medicine deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Suppliers Endpoints
+app.get('/suppliers', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM suppliers ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+app.post('/suppliers', async (req, res) => {
+  const { name, contact_number, email, address } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO suppliers (name, contact_number, email, address) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, contact_number, email, address]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+app.delete('/suppliers/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM suppliers WHERE id = $1', [id]);
+    res.json({ message: 'Supplier deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Sales Endpoints
+app.post('/sales', async (req, res) => {
+  const { items, total_amount } = req.body;
+  // items: [{ medicine_id, quantity, price }]
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Create the sale record
+    const saleResult = await client.query(
+      'INSERT INTO sales (total_amount) VALUES ($1) RETURNING *',
+      [total_amount]
+    );
+    const saleId = saleResult.rows[0].id;
+
+    // Process each item
+    for (const item of items) {
+      await client.query(
+        'INSERT INTO sale_items (sale_id, medicine_id, quantity, price) VALUES ($1, $2, $3, $4)',
+        [saleId, item.medicine_id, item.quantity, item.price]
+      );
+
+      // Deduct inventory
+      await client.query(
+        'UPDATE medicines SET quantity = quantity - $1 WHERE id = $2',
+        [item.quantity, item.medicine_id]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json({ success: true, sale_id: saleId });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Failed to complete sale' });
+  } finally {
+    client.release();
+  }
+});
+
+app.get('/sales', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM sales ORDER BY id DESC LIMIT 50');
+    res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Database error' });
