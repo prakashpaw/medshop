@@ -427,9 +427,49 @@ export default function App() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <button className="btn-primary" onClick={openAddModal}>
-                <Plus size={18} /> Register Medicine
-              </button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: 'none' }}
+                  ref={fileInputRef}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setIsScanning(true);
+                    try {
+                      const result = await Tesseract.recognize(file, 'eng');
+                      const textLines = result.data.text.split('\n').filter(Boolean);
+
+                      // Open modal immediately and pre-fill likely name text
+                      openAddModal();
+                      setFormData(prev => ({
+                        ...prev,
+                        name: textLines.length > 0 ? textLines[0].substring(0, 30) : "Scanned Medicine"
+                      }));
+                      alert("OCR Scanned text. Please review and fill in remaining details (stock, price, expiry).");
+                    } catch (err) {
+                      console.error("OCR Error", err);
+                      alert("Error extracting text from image");
+                    } finally {
+                      setIsScanning(false);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }
+                  }}
+                />
+                <button
+                  className="btn-secondary"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Scan using Camera/AI"
+                  disabled={isScanning}
+                >
+                  {isScanning ? <Loader2 className="animate-pulse" size={18} /> : <span><Camera size={18} /> Scan Medicine</span>}
+                </button>
+                <button className="btn-primary" onClick={openAddModal}>
+                  <Plus size={18} /> Register Medicine
+                </button>
+              </div>
             </div>
 
             {loading ? (
