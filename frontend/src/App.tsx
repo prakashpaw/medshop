@@ -266,7 +266,7 @@ export default function App() {
       });
       if (res.ok) {
         alert("Checkout successful!");
-        window.print();
+        printReceipt();
         setPosCart([]);
         fetchMedicines(); // refresh inventory
       } else {
@@ -303,6 +303,11 @@ export default function App() {
       setIsScanning(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const printReceipt = () => {
+    // We will trigger a print that only shows the #printable-receipt element
+    window.print();
   };
 
   // --- Helpers ---
